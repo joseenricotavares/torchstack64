@@ -1,0 +1,33 @@
+name: Tag package release
+description: Tags the repo at the package's current pyproject.toml version, if not already tagged, and pushes the tag.
+
+inputs:
+  package-dir:
+    description: Path to the package root (containing pyproject.toml).
+    required: true
+  tag-format:
+    description: The tag's name; {name} and {version} are replaced from pyproject.toml.
+    required: false
+    default: "{name}-v{version}"
+
+runs:
+  using: composite
+  steps:
+    - name: Tag if needed
+      shell: bash
+      run: |
+        set -euo pipefail
+        DIR="${{ inputs.package-dir }}"
+        FORMAT="${{ inputs.tag-format }}"
+        name=$(grep -m1 '^name = ' "$DIR/pyproject.toml" | sed -E 's/name = "(.*)"/\1/')
+        version=$(grep -m1 '^version = ' "$DIR/pyproject.toml" | sed -E 's/version = "(.*)"/\1/')
+        tag="${FORMAT//\{name\}/$name}"
+        tag="${tag//\{version\}/$version}"
+
+        if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+          echo "OK: $tag already exists, skipping."
+        else
+          git tag -a "$tag" -m "$tag"
+          git push origin "$tag"
+          echo "Created and pushed tag $tag"
+        fi
