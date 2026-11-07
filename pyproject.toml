@@ -4,13 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlkit"
-version = "0.1.1"
-description = "torchstack64: a small PyTorch training loop with callbacks and plots, to one person's taste, plus the contract that lets what it trains be packed and served."
+version = "0.2.0"
+description = "Reusable epoch-based PyTorch training toolkit plus framework-agnostic model artifact/serving contracts."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "torch>=2.8,<3",
+    "scikit-learn>=1.4,<2",
+]
 
 [project.optional-dependencies]
+mlflow = ["mlflow>=2.11,<3"]
+callbacks-rich = ["rich>=13"]
+callbacks-optuna = ["optuna>=4"]
+plotting = ["matplotlib>=3.8"]
+# Self-referential extra: pyproject.toml is declarative data, not a template
+# language, so this list of extra names has to be kept in sync by hand
+# whenever a new extra is added above.
+all = ["dlkit[mlflow,callbacks-rich,callbacks-optuna,plotting]"]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11"]
 
 [tool.setuptools.packages.find]
