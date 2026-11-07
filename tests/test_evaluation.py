@@ -1,5 +1,6 @@
-from dlkit.evaluation import AccuracyMetric, EvaluationResult, Evaluator, F1Metric
 from sklearn.metrics import accuracy_score, f1_score
+
+from dlkit.evaluation import AccuracyMetric, EvaluationResult, Evaluator, F1Metric
 
 Y_TRUE = [0, 1, 1, 0, 2, 2, 1, 0]
 Y_PRED = [0, 1, 0, 0, 2, 1, 1, 1]

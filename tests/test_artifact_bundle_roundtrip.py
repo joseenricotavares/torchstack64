@@ -1,6 +1,7 @@
 import json
 
 import pytest
+
 from dlkit.artifacts.bundle import ArtifactBundle, BundleFile, LabelSchema
 
 

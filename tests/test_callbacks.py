@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
 import torch
+from torch import nn
+
 from dlkit.training.base import NNTrainer
 from dlkit.training.callbacks import HistoryPlotCallback, build
 from dlkit.training.monitor import Monitor
-from torch import nn
 
 
 @dataclass

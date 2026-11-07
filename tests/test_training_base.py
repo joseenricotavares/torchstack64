@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 
 import torch
+from torch import nn
+
 from dlkit.training.base import NNTrainer, TrainerCallback
 from dlkit.training.monitor import Monitor
-from torch import nn
 
 
 @dataclass
