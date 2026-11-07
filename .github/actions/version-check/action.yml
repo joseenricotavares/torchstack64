@@ -1,0 +1,50 @@
+name: Version check
+description: Fails if the package's source (or any extra path) changed without a version bump in its pyproject.toml, or if the version changed without a CHANGELOG.md entry.
+
+inputs:
+  package-name:
+    description: Human-readable name of the package, used in log/error messages.
+    required: true
+  package-dir:
+    description: Path to the package root (containing src/ and pyproject.toml).
+    required: true
+  base-sha:
+    description: Git SHA to diff against (usually the PR base).
+    required: true
+  also:
+    description: More paths, space-separated, whose change also needs a bump.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Check version bump
+      shell: bash
+      run: |
+        set -euo pipefail
+        NAME="${{ inputs.package-name }}"
+        DIR="${{ inputs.package-dir }}"
+        BASE="${{ inputs.base-sha }}"
+        ALSO="${{ inputs.also }}"
+
+        # shellcheck disable=SC2086 # ALSO is a list of paths
+        changed=$(git diff --name-only "$BASE"...HEAD -- "$DIR/src" "$DIR/pyproject.toml" $ALSO | wc -l)
+        if [ "$changed" -eq 0 ]; then
+          echo "OK: $NAME - no source changes in this PR, no version bump required."
+          exit 0
+        fi
+
+        version_line_changed=$(git diff "$BASE"...HEAD -- "$DIR/pyproject.toml" | grep -c '^[+-]version = ' || true)
+        if [ "$version_line_changed" -eq 0 ]; then
+          echo "::error::$NAME changed under $DIR/src, $DIR/pyproject.toml or ${ALSO:-nothing else} but the 'version' field in $DIR/pyproject.toml was not bumped. Bump it (patch/minor/major as appropriate) before merging."
+          exit 1
+        fi
+
+        # A new version says what changed. A package without a changelog is not asked for one.
+        changelog_changed=$(git diff --name-only "$BASE"...HEAD -- "$DIR/CHANGELOG.md" | wc -l)
+        if [ -f "$DIR/CHANGELOG.md" ] && [ "$changelog_changed" -eq 0 ]; then
+          echo "::error::$NAME has a new version but $DIR/CHANGELOG.md did not change. Add the section of this version: what changed in it."
+          exit 1
+        fi
+        echo "OK: $NAME - source changed, version was bumped and the changelog says what changed."
