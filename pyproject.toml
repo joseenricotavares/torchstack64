@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "torchstack64: a small PyTorch training loop with callbacks and plots, to one person's taste, plus the contract that lets what it trains be packed and served."
 readme = "README.md"
 requires-python = ">=3.12"
