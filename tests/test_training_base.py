@@ -34,8 +34,14 @@ class ScriptedTrainer(NNTrainer):
     without any real data or gradients."""
 
     def __init__(self, model, config, val_losses, callbacks):
-        super().__init__(model, train_loader=None, val_loader=None, config=config,
-                          device=torch.device("cpu"), callbacks=callbacks)
+        super().__init__(
+            model,
+            train_loader=None,
+            val_loader=None,
+            config=config,
+            device=torch.device("cpu"),
+            callbacks=callbacks,
+        )
         self._val_losses = iter(val_losses)
 
     def _train_epoch(self) -> float:

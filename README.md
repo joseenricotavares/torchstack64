@@ -95,6 +95,7 @@ from dlkit.training.callbacks import build as build_callbacks
 from dlkit.evaluation import AccuracyMetric
 from dlkit.artifacts import ArtifactBundle, BundleFile, LabelSchema
 
+
 # 1. Your concrete config - a few lines, once per project.
 @dataclass
 class MyConfig:
@@ -105,27 +106,30 @@ class MyConfig:
     learning_rate: float = 1e-3
     weight_decay: float = 1e-2
 
+
 # 2. Your trainer - only what's specific to your model.
 class MyTrainer(NNTrainer[MyConfig]):
     def __init__(self, model, train_loader, val_loader, config, device, callbacks=None):
         super().__init__(model, train_loader, val_loader, config, device, callbacks)
         self.optimizer = OPTIMIZERS[config.optimizer](model.parameters(), lr=config.learning_rate)
 
-    def _train_epoch(self) -> float: ...       # your forward/backward
-    def predict(self, loader): ...               # your validation forward pass
+    def _train_epoch(self) -> float: ...  # your forward/backward
+    def predict(self, loader): ...  # your validation forward pass
 
     def save(self, output_dir) -> ArtifactBundle:
         return ArtifactBundle.write(
-            output_dir, flavor="my-model",
+            output_dir,
+            flavor="my-model",
             label_schema=LabelSchema(kind="categorical", classes=(0, 1)),
             files={"weights": BundleFile("weights.pt", lambda p: torch.save(self.best.state, p))},
         )
 
+
 # 3. Train, with MLflow logging + a progress bar + a training-curve plot for free.
-trainer = MyTrainer(model, train_loader, val_loader, MyConfig(), device,
-                     callbacks=build_callbacks())
+trainer = MyTrainer(model, train_loader, val_loader, MyConfig(), device, callbacks=build_callbacks())
 trainer.fit()
 bundle = trainer.save("artifacts/my-model")
+
 
 # 4. Serve - any process, same artifact format.
 class MyPredictor:
@@ -134,6 +138,7 @@ class MyPredictor:
     @classmethod
     def load(cls, bundle: ArtifactBundle, device="cpu") -> "MyPredictor": ...
     def predict(self, inputs): ...
+
 
 predictor = MyPredictor.load(ArtifactBundle.read("artifacts/my-model"))
 predictor.predict([...])

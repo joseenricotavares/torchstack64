@@ -18,8 +18,12 @@ class FakeConfig:
 class OneEpochTrainer(NNTrainer):
     def __init__(self, model, config, callbacks):
         super().__init__(
-            model, train_loader=None, val_loader=None, config=config,
-            device=torch.device("cpu"), callbacks=callbacks,
+            model,
+            train_loader=None,
+            val_loader=None,
+            config=config,
+            device=torch.device("cpu"),
+            callbacks=callbacks,
         )
 
     def _train_epoch(self) -> float:

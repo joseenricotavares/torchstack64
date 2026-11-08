@@ -70,7 +70,7 @@ class HistoryPlotCallback(TrainerCallback):
     def on_train_end(self, trainer: NNTrainer) -> None:
         import matplotlib
 
-        matplotlib.use("Agg") 
+        matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
         entries = trainer.history.entries

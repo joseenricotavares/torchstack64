@@ -9,8 +9,8 @@ from dlkit.evaluation.metrics.base import Metric
 
 @dataclass(frozen=True, slots=True)
 class Monitor:
-    """What `NNTrainer.fit()` watches to pick the best checkpoint and decide when to early-stop. 
-    `metric=None` means "monitor validation loss itself" 
+    """What `NNTrainer.fit()` watches to pick the best checkpoint and decide when to early-stop.
+    `metric=None` means "monitor validation loss itself"
     """
 
     metric: Metric | None

@@ -46,9 +46,7 @@ class LocalPathSource:
 class MLflowRunSource:
     """Downloads a bundle from an MLflow run's artifacts."""
 
-    def __init__(
-        self, run_id: str, artifact_path: str = "model", tracking_uri: str | None = None
-    ) -> None:
+    def __init__(self, run_id: str, artifact_path: str = "model", tracking_uri: str | None = None) -> None:
         self.run_id = run_id
         self.artifact_path = artifact_path
         self.tracking_uri = tracking_uri
@@ -58,9 +56,7 @@ class MLflowRunSource:
 
         if self.tracking_uri is not None:
             mlflow.set_tracking_uri(self.tracking_uri)
-        local_dir = mlflow.artifacts.download_artifacts(
-            run_id=self.run_id, artifact_path=self.artifact_path
-        )
+        local_dir = mlflow.artifacts.download_artifacts(run_id=self.run_id, artifact_path=self.artifact_path)
         return Path(local_dir)
 
 

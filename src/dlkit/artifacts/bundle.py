@@ -80,8 +80,14 @@ class ArtifactBundle:
         return self.root / relative_path
 
     @classmethod
-    def write(cls, root: str | Path, *, flavor: str, label_schema: LabelSchema,
-        files: dict[str, BundleFile], metrics: dict[str, float] | None = None,
+    def write(
+        cls,
+        root: str | Path,
+        *,
+        flavor: str,
+        label_schema: LabelSchema,
+        files: dict[str, BundleFile],
+        metrics: dict[str, float] | None = None,
     ) -> ArtifactBundle:
         """Materializes every file in `files`, then writes the manifest describing them.
 
@@ -105,9 +111,7 @@ class ArtifactBundle:
             artifacts=artifacts,
             metrics=dict(metrics or {}),
         )
-        (root / cls.MANIFEST_FILENAME).write_text(
-            json.dumps(manifest.to_json(), indent=2), encoding="utf-8"
-        )
+        (root / cls.MANIFEST_FILENAME).write_text(json.dumps(manifest.to_json(), indent=2), encoding="utf-8")
         return cls(root=root, manifest=manifest)
 
     @classmethod

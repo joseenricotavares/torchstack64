@@ -3,9 +3,7 @@ from __future__ import annotations
 from dlkit.evaluation.evaluator import EvaluationResult
 
 
-def log_evaluation(
-    result: EvaluationResult, *, phase: str | None = None, run_id: str | None = None
-) -> None:
+def log_evaluation(result: EvaluationResult, *, phase: str | None = None, run_id: str | None = None) -> None:
     """Logs every metric in `result.values` to the active or given MLflow run."""
     import mlflow
 
