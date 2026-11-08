@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 
 import torch
@@ -5,6 +6,9 @@ from torch import nn
 
 from dlkit.training.base import NNTrainer
 from dlkit.training.callbacks import HistoryPlotCallback, build
+from dlkit.training.callbacks.mlflow_callback import MLflowCallback
+from dlkit.training.callbacks.optuna_pruning import OptunaPruningCallback
+from dlkit.training.callbacks.rich_progress import RichProgressCallback
 from dlkit.training.monitor import Monitor
 
 
@@ -71,3 +75,55 @@ def test_history_plot_callback_can_keep_local_files_without_mlflow(tmp_path, mon
 
     assert callback.filename.exists()
     assert callback.filename.with_suffix(".csv").exists()
+
+
+def test_history_plot_callback_writes_nothing_when_no_epoch_ran(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    config = FakeConfig(epochs=0, early_stopping_patience=1, monitor=Monitor(metric=None, mode="min"))
+    callback = HistoryPlotCallback(keep_local=True, log_to_mlflow=True)
+    trainer = OneEpochTrainer(_make_model(), config, callbacks=[callback])
+
+    trainer.fit()
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_history_plot_callback_leaves_no_files_behind_without_matplotlib(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setitem(sys.modules, "matplotlib", None)  # makes `import matplotlib` raise
+    config = FakeConfig(epochs=1, early_stopping_patience=1, monitor=Monitor(metric=None, mode="min"))
+    callback = HistoryPlotCallback(keep_local=False, log_to_mlflow=True)
+    trainer = OneEpochTrainer(_make_model(), config, callbacks=[callback])
+
+    trainer.fit()
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_build_assembles_the_whole_stack_in_order(fake_rich):
+    trial = object()
+
+    callbacks = build(enable_mlflow=True, progress=True, plot=True, optuna_trial=trial, keep_plot=True)
+
+    assert [type(callback) for callback in callbacks] == [
+        MLflowCallback,
+        RichProgressCallback,
+        HistoryPlotCallback,
+        OptunaPruningCallback,
+    ]
+    plot = callbacks[2]
+    assert plot.keep_local is True
+    assert plot.log_to_mlflow is True
+    assert callbacks[3].trial is trial
+
+
+def test_build_with_every_toggle_off_returns_an_empty_stack():
+    assert build(enable_mlflow=False, progress=False, plot=False) == []
+
+
+def test_build_ties_the_plots_mlflow_logging_to_the_mlflow_toggle():
+    (plot,) = build(enable_mlflow=False, progress=False, plot=True)
+
+    assert isinstance(plot, HistoryPlotCallback)
+    assert plot.log_to_mlflow is False
+    assert plot.keep_local is False
