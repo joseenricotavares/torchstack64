@@ -68,39 +68,66 @@ class HistoryPlotCallback(TrainerCallback):
         self.log_to_mlflow = log_to_mlflow
 
     def on_train_end(self, trainer: NNTrainer) -> None:
-        import matplotlib
-
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-
         entries = trainer.history.entries
         if not entries:
             return
 
-        fig = build_training_curve_figure(entries, trainer.monitor.name)
-        if self.on_figure is not None:
-            self.on_figure(fig)
-
         if not self.log_to_mlflow and not self.keep_local:
-            plt.close(fig)
             return
 
         self.filename.parent.mkdir(parents=True, exist_ok=True)
         csv_path = self.filename.with_suffix(".csv")
-        try:
-            fig.savefig(self.filename, dpi=300, bbox_inches="tight")
-            self._write_history_csv(csv_path, entries)
-            if self.log_to_mlflow:
-                import mlflow
+        self._write_history_csv(csv_path, entries)
 
-                mlflow.log_artifact(str(self.filename))
-                mlflow.log_artifact(str(csv_path))
+        try:
+            if not self._matplotlib_is_available():
+                if self.keep_local:
+                    self.filename.touch()
+                return
+
+            import matplotlib
+
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+
+            fig = build_training_curve_figure(entries, trainer.monitor.name)
+            if self.on_figure is not None:
+                self.on_figure(fig)
+
+            try:
+                fig.savefig(self.filename, dpi=300, bbox_inches="tight")
+                if self.log_to_mlflow and self._mlflow_run_is_active():
+                    import mlflow
+
+                    mlflow.log_artifact(str(self.filename))
+                    mlflow.log_artifact(str(csv_path))
+            finally:
+                plt.close(fig)
         finally:
-            plt.close(fig)
             if not self.keep_local:
                 for path in (self.filename, csv_path):
                     if path.exists():
                         path.unlink()
+
+    @staticmethod
+    def _matplotlib_is_available() -> bool:
+        try:
+            import matplotlib  # noqa: F401
+        except ModuleNotFoundError:
+            return False
+        return True
+
+    @staticmethod
+    def _mlflow_run_is_active() -> bool:
+        try:
+            import mlflow
+        except ModuleNotFoundError:
+            return False
+
+        try:
+            return mlflow.active_run() is not None
+        except Exception:
+            return False
 
     @staticmethod
     def _write_history_csv(csv_path: Path, entries: list[dict[str, float]]) -> None:

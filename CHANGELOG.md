@@ -4,6 +4,11 @@ What changed in each version, newest first. A pull request that bumps `version` 
 `pyproject.toml` adds the section of that version here. A change takes a line or two: what changed
 for the reader, not how it works.
 
+## 0.2.1
+
+- The package handles missing optional plotting dependencies and missing installed metadata without
+  crashing, so the library still imports and the training history callback can keep local files safely.
+
 ## 0.2.0
 
 - The library arrives as it stood in its first home, unchanged: the training loop and its callbacks,

@@ -21,11 +21,17 @@ class MLflowCallback(TrainerCallback):
         self.start_time = time.perf_counter()
 
     def on_epoch_end(self, trainer: NNTrainer, result: EpochResult) -> None:
+        if not self._mlflow_run_is_active():
+            return
+
         import mlflow
 
         mlflow.log_metrics(result.metrics, step=result.epoch)
 
     def on_train_end(self, trainer: NNTrainer) -> None:
+        if not self._mlflow_run_is_active():
+            return
+
         import mlflow
 
         if self.start_time is not None:
@@ -38,3 +44,15 @@ class MLflowCallback(TrainerCallback):
             mlflow.log_artifacts(local_dir=str(self.artifact_dir), artifact_path="model")
         finally:
             shutil.rmtree(self.artifact_dir, ignore_errors=True)
+
+    @staticmethod
+    def _mlflow_run_is_active() -> bool:
+        try:
+            import mlflow
+        except ModuleNotFoundError:
+            return False
+
+        try:
+            return mlflow.active_run() is not None
+        except Exception:
+            return False

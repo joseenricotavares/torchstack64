@@ -1,4 +1,7 @@
+from importlib import metadata as _metadata
 from importlib.metadata import version as _pkg_version
+
+PackageNotFoundError = _metadata.PackageNotFoundError
 
 from dlkit.artifacts import (
     ArtifactBundle,
@@ -27,7 +30,10 @@ from dlkit.training import (
     TrainingHistory,
 )
 
-__version__ = _pkg_version("dlkit")
+try:
+    __version__ = _pkg_version("dlkit")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 __all__ = [
     "__version__",
